@@ -1,0 +1,5 @@
+{
+  "name": "Gemini 2.5 Flash Chat",
+  "description": "A high-performance multimodal chat interface powered by Google's Gemini 2.5 Flash model, supporting text and image analysis with real-time streaming.",
+  "requestFramePermissions": []
+}
