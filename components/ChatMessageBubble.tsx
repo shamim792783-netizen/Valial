@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Bot, User, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../types';
 
@@ -26,8 +27,8 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message })
         </div>
 
         {/* Bubble Content */}
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-          <div className={`rounded-2xl px-5 py-3 shadow-sm ${
+        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-full min-w-0`}>
+          <div className={`rounded-2xl px-5 py-3 shadow-sm w-full ${
             isUser 
               ? 'bg-indigo-600 text-white rounded-tr-sm' 
               : message.image ? 'bg-slate-800 text-slate-100 border border-purple-500/30 rounded-tl-sm' : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-tl-sm'
@@ -46,9 +47,34 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message })
 
             {/* Text Content */}
             {(message.text || message.isStreaming) && (
-              <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert text-white' : 'prose-invert text-slate-100'} break-words`}>
+              <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert text-white' : 'prose-invert text-slate-100'} break-words overflow-hidden`}>
                  {message.text ? (
-                   <ReactMarkdown>{message.text}</ReactMarkdown>
+                   <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        // Ensure links open in new tab
+                        a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all" />,
+                        // Style code blocks specifically
+                        pre: ({node, ...props}) => (
+                            <div className="overflow-x-auto my-2 rounded-lg border border-slate-700/50 bg-slate-900/50">
+                                <pre {...props} className="p-3 m-0 bg-transparent" />
+                            </div>
+                        ),
+                        code: ({node, ...props}) => {
+                            // Helper to check if it's inline code by lack of specific props usually passed to block code
+                            // @ts-ignore
+                            const isInline = !props.className && !String(props.children).includes('\n');
+                            return (
+                                <code 
+                                    {...props} 
+                                    className={`${props.className || ''} ${isInline ? 'bg-slate-700/50 rounded px-1 py-0.5 text-xs font-mono' : 'text-xs font-mono'}`} 
+                                />
+                            )
+                        }
+                      }}
+                   >
+                     {message.text}
+                   </ReactMarkdown>
                  ) : (
                    message.isStreaming && <span className="animate-pulse">Thinking...</span>
                  )}
